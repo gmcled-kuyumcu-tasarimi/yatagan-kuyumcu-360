@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yatağan Kuyumcu 360°</title>
+<link rel="stylesheet" href="lib/pannellum.min.css">
+<script src="lib/pannellum.min.js"></script>
+<style>
+  :root { --zemin:#07080d; --panel:rgba(14,16,26,.8); --yazi:#efe6d6; --soluk:#a99f8e; --altin:#d8b46a; --cizgi:rgba(216,180,106,.3); }
+  html,body { margin:0; height:100%; background:var(--zemin); color:var(--yazi); font-family:Montserrat,system-ui,sans-serif; overflow:hidden; }
+  #pano { position:fixed; inset:0; }
+  .baslik { position:fixed; top:16px; left:16px; z-index:5; background:var(--panel); border:1px solid var(--cizgi); border-radius:12px; padding:12px 16px; backdrop-filter:blur(8px); }
+  .baslik b { display:block; font-size:15px; letter-spacing:.06em; color:var(--altin); }
+  .baslik span { font-size:12px; color:var(--soluk); }
+  .alt { position:fixed; left:16px; right:16px; bottom:16px; z-index:5; display:flex; justify-content:center; }
+  .sira { display:flex; flex-wrap:wrap; gap:6px; background:var(--panel); border:1px solid var(--cizgi); border-radius:14px; padding:8px; backdrop-filter:blur(8px); }
+  button { font:inherit; font-size:13px; color:var(--yazi); background:transparent; border:1px solid transparent; border-radius:9px; padding:8px 12px; cursor:pointer; }
+  button:hover { border-color:var(--cizgi); } button.acik { background:rgba(216,180,106,.16); border-color:var(--altin); }
+  button:disabled { opacity:.35; cursor:default; }
+</style>
+</head>
+<body>
+<div id="pano"></div>
+<div class="baslik"><b>YATAĞAN · KUYUMCU · 360°</b><span>GMC LED · sürükle: etrafına bak · kaydır: yakınlaş</span></div>
+<div class="alt"><div class="sira" id="noktalar"></div></div>
+<script>
+const NOKTA = [['pano_musteri', 'Banko önü'], ['pano_giris', 'Giriş'], ['pano_personel', 'Personel'], ['pano_danisma', 'Danışma']];
+const kutu = document.getElementById('noktalar'); let viewer = null;
+function ac(id) {
+  if (viewer) viewer.destroy();
+  viewer = pannellum.viewer('pano', { type: 'equirectangular', panorama: id + '.jpg', autoLoad: true, autoRotate: -1.5,
+    compass: false, showZoomCtrl: true, hfov: 95, minHfov: 40, maxHfov: 120, showFullscreenCtrl: true });
+  kutu.querySelectorAll('button').forEach(b => b.classList.toggle('acik', b.dataset.id === id));
+}
+NOKTA.forEach(([id, ad]) => {
+  const b = document.createElement('button'); b.textContent = ad; b.dataset.id = id; b.onclick = () => ac(id); b.disabled = true; kutu.appendChild(b);
+  fetch(id + '.jpg', { method: 'HEAD' }).then(r => { b.disabled = !r.ok; if (r.ok && !viewer) ac(id); });
+});
+</script>
+</body>
+</html>
