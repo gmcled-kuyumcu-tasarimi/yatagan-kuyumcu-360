@@ -44,11 +44,12 @@
   <div class="bilgi">34 ETNA 26 &nbsp;/&nbsp; 27 BLADE 12 &nbsp;/&nbsp; 12 FLAT LINE<br><a id="tam">Tam ekran</a></div>
 </div>
 <script>
-const NOKTA = [['pano_giris', 'Giriş'], ['pano_musteri', 'Banko önü'], ['pano_personel', 'Personel'], ['pano_danisma', 'Danışma']];
+const NOKTA = [['pano_giris', 'Giriş', 180], ['pano_musteri', 'Banko önü', 0], ['pano_personel', 'Personel', 0], ['pano_danisma', 'Danışma', 0]];   // 3. değer: açılış yönü (derece)
+const YON = Object.fromEntries(NOKTA.map(n => [n[0], n[2]]));
 const nav = document.getElementById('noktalar'); let viewer = null;
 function ac(id) {
   if (viewer) viewer.destroy();
-  viewer = pannellum.viewer('pano', { type: 'equirectangular', panorama: id + '.jpg', autoLoad: true, autoRotate: -1.2,
+  viewer = pannellum.viewer('pano', { type: 'equirectangular', panorama: id + '.jpg', autoLoad: true, autoRotate: -1.2, yaw: YON[id] || 0,
     compass: false, showZoomCtrl: false, showFullscreenCtrl: false, hfov: 95, minHfov: 40, maxHfov: 120,
     strings: { loadingLabel: 'Yükleniyor', bylineLabel: '' } });
   nav.querySelectorAll('a').forEach(a => a.classList.toggle('acik', a.dataset.id === id));
