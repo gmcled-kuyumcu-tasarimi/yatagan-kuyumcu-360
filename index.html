@@ -29,6 +29,12 @@
   .pnlm-load-box { background:transparent !important; border-radius:0 !important; font-family:Montserrat,sans-serif; letter-spacing:.2em; text-transform:uppercase; font-size:11px; }
   .pnlm-load-box p { font-size:11px !important; } .pnlm-lbar { border-radius:0 !important; height:1px !important; border-color:var(--altin) !important; }
   .pnlm-lbar-fill { background:var(--altin) !important; border-radius:0 !important; }
+  .gecis { cursor:pointer; width:1px; height:1px; }
+  .gecis div { position:absolute; left:50%; top:0; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; gap:12px; white-space:nowrap; }
+  .gecis i { width:22px; height:22px; border:1px solid var(--altin); transform:rotate(45deg); background:rgba(7,8,13,.35); transition:background .25s; }
+  .gecis span { font-size:11px; font-weight:400; letter-spacing:.28em; text-transform:uppercase; color:var(--yazi); padding-bottom:6px;
+                border-bottom:1px solid var(--altin); text-shadow:0 1px 8px rgba(0,0,0,.8); }
+  .gecis:hover i { background:rgba(207,174,107,.45); }
   @media (max-width:640px) { .ust, .alt { padding:18px 16px; } .alt { flex-direction:column; align-items:flex-start; gap:12px; }
     nav a { margin-right:18px; font-size:10px; letter-spacing:.16em; } .bilgi { text-align:left; } .proje { font-size:18px; } }
 </style>
@@ -44,19 +50,27 @@
   <div class="bilgi"><span id="urunler">34 ETNA 26 &nbsp;/&nbsp; 27 BLADE 12 &nbsp;/&nbsp; 12 FLAT LINE</span><br><a id="tam">Tam ekran</a></div>
 </div>
 <script>
-const MAGAZA = '34 ETNA 26 &nbsp;/&nbsp; 27 BLADE 12 &nbsp;/&nbsp; 12 FLAT LINE';
-const NOKTA = [['pano_giris', 'Giriş', 180, MAGAZA], ['pano_musteri', 'Banko önü', 0, MAGAZA], ['pano_personel', 'Personel', 0, MAGAZA], ['pano_danisma', 'Danışma', 0, MAGAZA],
+const MAGAZA = '21 ETNA 26 &nbsp;/&nbsp; 13 HEKTA 26 &nbsp;/&nbsp; 27 BLADE 12 &nbsp;/&nbsp; 12 FLAT LINE';
+// kapıdan geçiş: [hedef, yazı, yaw, pitch, hedefte açılış yönü] — yönler sahne koordinatından hesaplandı
+const GECIS = {
+  pano_danisma: [['pano_toplanti', 'Toplantı salonu', -58, -7, 0]],
+  pano_toplanti: [['pano_danisma', 'Mağaza', -100, -10, 120], ['pano_kasa', 'Çelik kasa', 0, -6, 0]],
+  pano_kasa: [['pano_toplanti', 'Toplantı salonu', 180, -30, 180]]
+};
+const NOKTA = [['pano_giris', 'Giriş', 180, MAGAZA, true], ['pano_musteri', 'Banko önü', 0, MAGAZA, true], ['pano_personel', 'Personel', 0, MAGAZA, true], ['pano_danisma', 'Danışma', 0, MAGAZA, true],
                ['pano_toplanti', 'Toplantı', 0, '3 HEKTA 26 &nbsp;/&nbsp; 8 BLADE 12', true], ['pano_kasa', 'Kasa', 0, '3 BLADE 12', true]];   // açılış yönü (derece), ürünler, 8K
 const YON = Object.fromEntries(NOKTA.map(n => [n[0], n[2]]));
 const URUN = Object.fromEntries(NOKTA.map(n => [n[0], n[3]]));
 const SEKIZK = new Set(NOKTA.filter(n => n[4]).map(n => n[0]));
 const ENBUYUK = (() => { try { const gl = document.createElement('canvas').getContext('webgl'); return gl ? gl.getParameter(gl.MAX_TEXTURE_SIZE) : 4096; } catch (e) { return 4096; } })();
 const dosya = id => id + (SEKIZK.has(id) && ENBUYUK < 8192 ? '_4k' : '') + '.jpg';   // 8K'yı açamayan telefonlarda 4K kopya
-const YON = Object.fromEntries(NOKTA.map(n => [n[0], n[2]]));
 const nav = document.getElementById('noktalar'); let viewer = null;
-function ac(id) {
+function isaret(div, ad) { div.classList.add('gecis'); div.innerHTML = '<div><i></i><span>' + ad + '</span></div>'; }
+function ac(id, yaw) {
   if (viewer) viewer.destroy();
-  viewer = pannellum.viewer('pano', { type: 'equirectangular', panorama: dosya(id), autoLoad: true, autoRotate: -1.2, yaw: YON[id] || 0,
+  const noktalar = (GECIS[id] || []).filter(g => !nav.querySelector('a[data-id="' + g[0] + '"]').classList.contains('kapali'))
+    .map(([hedef, ad, y, p, hy]) => ({ yaw: y, pitch: p, cssClass: 'gecis', createTooltipFunc: isaret, createTooltipArgs: ad, clickHandlerFunc: () => ac(hedef, hy) }));
+  viewer = pannellum.viewer('pano', { type: 'equirectangular', panorama: dosya(id), autoLoad: true, autoRotate: -1.2, yaw: yaw ?? (YON[id] || 0), hotSpots: noktalar,
     compass: false, showZoomCtrl: false, showFullscreenCtrl: false, hfov: 95, minHfov: 40, maxHfov: 120,
     strings: { loadingLabel: 'Yükleniyor', bylineLabel: '' } });
   nav.querySelectorAll('a').forEach(a => a.classList.toggle('acik', a.dataset.id === id));
