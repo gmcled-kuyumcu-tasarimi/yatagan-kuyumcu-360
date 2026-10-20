@@ -41,22 +41,30 @@
 </div>
 <div class="alt">
   <nav id="noktalar"></nav>
-  <div class="bilgi">34 ETNA 26 &nbsp;/&nbsp; 27 BLADE 12 &nbsp;/&nbsp; 12 FLAT LINE<br><a id="tam">Tam ekran</a></div>
+  <div class="bilgi"><span id="urunler">34 ETNA 26 &nbsp;/&nbsp; 27 BLADE 12 &nbsp;/&nbsp; 12 FLAT LINE</span><br><a id="tam">Tam ekran</a></div>
 </div>
 <script>
-const NOKTA = [['pano_giris', 'Giriş', 180], ['pano_musteri', 'Banko önü', 0], ['pano_personel', 'Personel', 0], ['pano_danisma', 'Danışma', 0]];   // 3. değer: açılış yönü (derece)
+const MAGAZA = '34 ETNA 26 &nbsp;/&nbsp; 27 BLADE 12 &nbsp;/&nbsp; 12 FLAT LINE';
+const NOKTA = [['pano_giris', 'Giriş', 180, MAGAZA], ['pano_musteri', 'Banko önü', 0, MAGAZA], ['pano_personel', 'Personel', 0, MAGAZA], ['pano_danisma', 'Danışma', 0, MAGAZA],
+               ['pano_toplanti', 'Toplantı', 0, '3 HEKTA 26 &nbsp;/&nbsp; 8 BLADE 12', true], ['pano_kasa', 'Kasa', 0, '3 BLADE 12', true]];   // açılış yönü (derece), ürünler, 8K
+const YON = Object.fromEntries(NOKTA.map(n => [n[0], n[2]]));
+const URUN = Object.fromEntries(NOKTA.map(n => [n[0], n[3]]));
+const SEKIZK = new Set(NOKTA.filter(n => n[4]).map(n => n[0]));
+const ENBUYUK = (() => { try { const gl = document.createElement('canvas').getContext('webgl'); return gl ? gl.getParameter(gl.MAX_TEXTURE_SIZE) : 4096; } catch (e) { return 4096; } })();
+const dosya = id => id + (SEKIZK.has(id) && ENBUYUK < 8192 ? '_4k' : '') + '.jpg';   // 8K'yı açamayan telefonlarda 4K kopya
 const YON = Object.fromEntries(NOKTA.map(n => [n[0], n[2]]));
 const nav = document.getElementById('noktalar'); let viewer = null;
 function ac(id) {
   if (viewer) viewer.destroy();
-  viewer = pannellum.viewer('pano', { type: 'equirectangular', panorama: id + '.jpg', autoLoad: true, autoRotate: -1.2, yaw: YON[id] || 0,
+  viewer = pannellum.viewer('pano', { type: 'equirectangular', panorama: dosya(id), autoLoad: true, autoRotate: -1.2, yaw: YON[id] || 0,
     compass: false, showZoomCtrl: false, showFullscreenCtrl: false, hfov: 95, minHfov: 40, maxHfov: 120,
     strings: { loadingLabel: 'Yükleniyor', bylineLabel: '' } });
   nav.querySelectorAll('a').forEach(a => a.classList.toggle('acik', a.dataset.id === id));
+  document.getElementById('urunler').innerHTML = URUN[id];
 }
 NOKTA.forEach(([id, ad]) => {
   const a = document.createElement('a'); a.textContent = ad; a.dataset.id = id; a.className = 'kapali'; a.onclick = () => ac(id); nav.appendChild(a);
-  fetch(id + '.jpg', { method: 'HEAD' }).then(r => { if (r.ok) { a.classList.remove('kapali'); if (!viewer && id === 'pano_giris') ac(id); } });
+  fetch(dosya(id), { method: 'HEAD' }).then(r => { if (r.ok) { a.classList.remove('kapali'); if (!viewer && id === 'pano_giris') ac(id); } });
 });
 setTimeout(() => { if (!viewer) { const ilk = nav.querySelector('a:not(.kapali)'); if (ilk) ac(ilk.dataset.id); } }, 1500);
 document.getElementById('tam').onclick = () => viewer && viewer.toggleFullscreen();
