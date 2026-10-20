@@ -53,9 +53,9 @@
 const MAGAZA = '21 ETNA 26 &nbsp;/&nbsp; 13 HEKTA 26 &nbsp;/&nbsp; 27 BLADE 12 &nbsp;/&nbsp; 12 FLAT LINE';
 // kapıdan geçiş: [hedef, yazı, yaw, pitch, hedefte açılış yönü] — yönler sahne koordinatından hesaplandı
 const GECIS = {
-  pano_danisma: [['pano_toplanti', 'Toplantı salonu', -58, -7, 0]],
+  pano_danisma: [['pano_toplanti', 'Toplantı salonu', -56, -7, 0]],
   pano_toplanti: [['pano_danisma', 'Mağaza', -100, -10, 120], ['pano_kasa', 'Çelik kasa', 0, -6, 0]],
-  pano_kasa: [['pano_toplanti', 'Toplantı salonu', 180, -30, 180]]
+  pano_kasa: [['pano_toplanti', 'Toplantı salonu', 180, -15, 180]]
 };
 const NOKTA = [['pano_giris', 'Giriş', 180, MAGAZA, true], ['pano_musteri', 'Banko önü', 0, MAGAZA, true], ['pano_personel', 'Personel', 0, MAGAZA, true], ['pano_danisma', 'Danışma', 0, MAGAZA, true],
                ['pano_toplanti', 'Toplantı', 0, '3 HEKTA 26 &nbsp;/&nbsp; 8 BLADE 12', true], ['pano_kasa', 'Kasa', 0, '3 BLADE 12', true]];   // açılış yönü (derece), ürünler, 8K
