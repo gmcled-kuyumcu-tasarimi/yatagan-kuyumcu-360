@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yatağan Kuyumcu 360° · v2</title>
+<link rel="stylesheet" href="../lib/pannellum.min.css">
+<script src="../lib/pannellum.min.js"></script>
+<style>
+  @font-face { font-family: Montserrat; src: url(../lib/Montserrat-Light.ttf); font-weight: 300; }
+  @font-face { font-family: Montserrat; src: url(../lib/Montserrat-Regular.ttf); font-weight: 400; }
+  @font-face { font-family: Montserrat; src: url(../lib/Montserrat-SemiBold.ttf); font-weight: 600; }
+  :root { --zemin:#07080d; --yazi:#efe7d8; --soluk:rgba(239,231,216,.62); --altin:#cfae6b; }
+  html,body { margin:0; height:100%; background:var(--zemin); color:var(--yazi); font-family:Montserrat,system-ui,sans-serif; overflow:hidden; }
+  #pano { position:fixed; inset:0; }
+  .ust, .alt { position:fixed; left:0; right:0; z-index:5; pointer-events:none; padding:28px 40px; }
+  .ust { top:0; background:linear-gradient(rgba(7,8,13,.72), rgba(7,8,13,0)); }
+  .alt { bottom:0; background:linear-gradient(rgba(7,8,13,0), rgba(7,8,13,.78)); display:flex; justify-content:space-between; align-items:flex-end; }
+  .marka { font-weight:600; font-size:13px; letter-spacing:.32em; color:var(--altin); }
+  .proje { margin-top:10px; font-weight:300; font-size:22px; letter-spacing:.04em; }
+  .proje small { display:block; margin-top:6px; font-size:11px; font-weight:400; letter-spacing:.22em; color:var(--soluk); text-transform:uppercase; }
+  nav { display:flex; pointer-events:auto; }
+  nav a { font-size:11px; font-weight:400; letter-spacing:.24em; text-transform:uppercase; color:var(--soluk); text-decoration:none;
+          padding:6px 0 8px; margin-right:34px; border-bottom:1px solid transparent; cursor:pointer; }
+  nav a.acik { color:var(--yazi); border-bottom-color:var(--altin); }
+  nav a.kapali { opacity:.3; pointer-events:none; }
+  .bilgi { font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--soluk); text-align:right; line-height:1.9; pointer-events:auto; }
+  .bilgi a { color:var(--soluk); text-decoration:none; border-bottom:1px solid rgba(239,231,216,.25); cursor:pointer; }
+  .pnlm-load-box { background:transparent !important; border-radius:0 !important; font-family:Montserrat,sans-serif; letter-spacing:.2em; text-transform:uppercase; font-size:11px; }
+  .pnlm-load-box p { font-size:11px !important; } .pnlm-lbar { border-radius:0 !important; height:1px !important; border-color:var(--altin) !important; }
+  .pnlm-lbar-fill { background:var(--altin) !important; border-radius:0 !important; }
+  .gecis { cursor:pointer; width:1px; height:1px; }
+  .gecis div { position:absolute; left:50%; top:0; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; gap:12px; white-space:nowrap; }
+  .gecis i { width:22px; height:22px; border:1px solid var(--altin); transform:rotate(45deg); background:rgba(7,8,13,.35); transition:background .25s; }
+  .gecis span { font-size:11px; font-weight:400; letter-spacing:.28em; text-transform:uppercase; color:var(--yazi); padding-bottom:6px;
+                border-bottom:1px solid var(--altin); text-shadow:0 1px 8px rgba(0,0,0,.8); }
+  .gecis:hover i { background:rgba(207,174,107,.45); }
+  .ust { display:flex; justify-content:space-between; align-items:flex-start; }
+  .stil { pointer-events:auto; text-align:right; }
+  .stil b { display:block; font-size:10px; font-weight:400; letter-spacing:.24em; text-transform:uppercase; color:var(--soluk); margin-bottom:8px; }
+  .stil a { font-size:11px; letter-spacing:.24em; text-transform:uppercase; color:var(--soluk); text-decoration:none; padding:4px 0 6px; margin-left:22px; border-bottom:1px solid transparent; cursor:pointer; }
+  .stil a.acik { color:var(--yazi); border-bottom-color:var(--altin); }
+  @media (max-width:640px) { .ust, .alt { padding:18px 16px; } .alt { flex-direction:column; align-items:flex-start; gap:12px; }
+    nav { flex-wrap:wrap; gap:4px 16px; max-width:100%; } nav a { margin-right:0; font-size:10px; letter-spacing:.14em; }
+    .gecis span { font-size:10px; letter-spacing:.2em; } .bilgi { text-align:left; } .proje { font-size:18px; }
+    .ust { flex-direction:column; gap:12px; } .stil { text-align:left; } .stil a { margin:0 16px 0 0; font-size:10px; letter-spacing:.14em; } }
+</style>
+</head>
+<body>
+<div id="pano"></div>
+<div class="ust">
+  <div><div class="marka">GMC LED</div>
+  <div class="proje">Yatağan · Kuyumcu<small>Aydınlatma projesi · 360° iç mekân</small></div></div>
+  <div class="stil"><b>Manken</b><span id="stiller"></span></div>
+</div>
+<div class="alt">
+  <nav id="noktalar"></nav>
+  <div class="bilgi"><span id="urunler">34 ETNA 26 &nbsp;/&nbsp; 27 BLADE 12 &nbsp;/&nbsp; 12 FLAT LINE</span><br><a id="tam">Tam ekran</a></div>
+</div>
+<script>
+const MAGAZA = '21 ETNA 26 &nbsp;/&nbsp; 13 HEKTA 26 &nbsp;/&nbsp; 27 BLADE 12 &nbsp;/&nbsp; 12 FLAT LINE';
+// kapıdan geçiş: [hedef, yazı, yaw, pitch, hedefte açılış yönü] — yönler sahne koordinatından hesaplandı
+const GECIS = {
+  pano_danisma: [['pano_toplanti', 'Toplantı salonu', -56, -7, 0]],
+  pano_toplanti: [['pano_danisma', 'Mağaza', -100, -10, 120], ['pano_kasa', 'Çelik kasa', 0, -6, 0]],
+  pano_kasa: [['pano_toplanti', 'Toplantı salonu', 180, -15, 180]]
+};
+const NOKTA = [['pano_giris', 'Giriş', 180, MAGAZA, true], ['pano_musteri', 'Banko önü', 0, MAGAZA, true], ['pano_personel', 'Personel', 0, MAGAZA, true], ['pano_danisma', 'Danışma', 0, MAGAZA, true],
+               ['pano_toplanti', 'Toplantı', 0, '3 HEKTA 26 &nbsp;/&nbsp; 8 BLADE 12', true], ['pano_kasa', 'Kasa', 0, '3 BLADE 12', true]];   // açılış yönü (derece), ürünler
+const YON = Object.fromEntries(NOKTA.map(n => [n[0], n[2]]));
+const URUN = Object.fromEntries(NOKTA.map(n => [n[0], n[3]]));
+const STIL = [['karma', 'Karma'], ['antrasit', 'Antrasit'], ['gri', 'Gri'], ['krem', 'Krem']];   // 24 Eki: 4 manken stili (2K)
+let stil = new URLSearchParams(location.search).get('stil'); if (!STIL.some(x => x[0] === stil)) stil = 'karma';
+const dosya = id => stil + '/' + id + '.jpg';
+const nav = document.getElementById('noktalar'); let viewer = null;
+function isaret(div, ad) { div.classList.add('gecis'); div.innerHTML = '<div><i></i><span>' + ad + '</span></div>'; }
+let acikId = null;
+function ac(id, yaw, pitch, hfov) {
+  if (viewer) viewer.destroy(); acikId = id;
+  const noktalar = (GECIS[id] || []).filter(g => !nav.querySelector('a[data-id="' + g[0] + '"]').classList.contains('kapali'))
+    .map(([hedef, ad, y, p, hy]) => ({ yaw: y, pitch: p, cssClass: 'gecis', createTooltipFunc: isaret, createTooltipArgs: ad, clickHandlerFunc: () => ac(hedef, hy) }));
+  viewer = pannellum.viewer('pano', { type: 'equirectangular', panorama: dosya(id), autoLoad: true, autoRotate: -1.2, yaw: yaw ?? (YON[id] || 0), pitch: pitch ?? 0, hfov: hfov ?? 95, hotSpots: noktalar,
+    compass: false, showZoomCtrl: false, showFullscreenCtrl: false, minHfov: 40, maxHfov: 120,
+    strings: { loadingLabel: 'Yükleniyor', bylineLabel: '' } });
+  nav.querySelectorAll('a').forEach(a => a.classList.toggle('acik', a.dataset.id === id));
+  document.getElementById('urunler').innerHTML = URUN[id];
+}
+NOKTA.forEach(([id, ad]) => {
+  const a = document.createElement('a'); a.textContent = ad; a.dataset.id = id; a.className = 'kapali'; a.onclick = () => ac(id); nav.appendChild(a);
+  fetch(dosya(id), { method: 'HEAD' }).then(r => { if (r.ok) { a.classList.remove('kapali'); if (!viewer && id === 'pano_giris') ac(id); } });
+});
+setTimeout(() => { if (!viewer) { const ilk = nav.querySelector('a:not(.kapali)'); if (ilk) ac(ilk.dataset.id); } }, 1500);
+const stilKutu = document.getElementById('stiller');
+STIL.forEach(([k, ad]) => {                                     // stil değişince aynı nokta ve aynı bakış yönü korunur
+  const a = document.createElement('a'); a.textContent = ad; a.dataset.stil = k; a.className = k === stil ? 'acik' : '';
+  a.onclick = () => { if (k === stil) return; stil = k; history.replaceState(null, '', '?stil=' + k);
+    stilKutu.querySelectorAll('a').forEach(b => b.classList.toggle('acik', b.dataset.stil === k));
+    if (viewer && acikId) ac(acikId, viewer.getYaw(), viewer.getPitch(), viewer.getHfov()); };
+  stilKutu.appendChild(a);
+});
+document.getElementById('tam').onclick = () => viewer && viewer.toggleFullscreen();
+</script>
+</body>
+</html>
